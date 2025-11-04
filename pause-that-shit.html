@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📱 Phone Roku Remote</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background: #222; 
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .remote { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            max-width: 300px; 
+            margin: 0 auto; 
+        }
+        button { 
+            padding: 20px; 
+            font-size: 18px; 
+            border: none; 
+            border-radius: 10px; 
+            background: #444; 
+            color: white; 
+            cursor: pointer; 
+        }
+        button:active { 
+            background: #666; 
+        }
+        .nav { background: #555; }
+        .apps { background: #d35400; }
+        .power { background: #c0392b; }
+        .playback { background: #27ae60; }
+        .voice { background: #9b59b6; }
+        input { 
+            padding: 10px; 
+            width: 200px; 
+            margin: 10px; 
+            border-radius: 5px; 
+            border: 1px solid #555; 
+        }
+    </style>
+</head>
+<body>
+    <h1>📱 Phone Roku Remote</h1>
+    
+    <input type="text" id="ip" placeholder="Roku IP (e.g., 192.168.1.100)">
+    
+    <!-- ADD VOICE BUTTON -->
+    <button class="voice" onclick="startVoice()">🎤 Voice Control</button>
+    <p id="voiceStatus"></p>
+    
+    <div class="remote">
+        <!-- Your existing buttons -->
+        <button class="nav" onclick="send('Home')">🏠 Home</button>
+        <button class="nav" onclick="send('Up')">⬆️ Up</button>
+        <button class="nav" onclick="send('Back')">↩️ Back</button>
+        
+        <button class="nav" onclick="send('Left')">⬅️ Left</button>
+        <button class="nav" onclick="send('Select')">✅ Select</button>
+        <button class="nav" onclick="send('Right')">➡️ Right</button>
+        
+        <button class="nav" onclick="send('Down')">⬇️ Down</button>
+        <button class="playback" onclick="send('Play')">▶️ Play</button>
+        <button class="playback" onclick="send('Pause')">⏸️ Pause</button>
+
+        <button class="apps" onclick="launch(12)">🍿 Netflix</button>
+        <button class="apps" onclick="launch(837)">📺 YouTube</button>
+        <button class="apps" onclick="launch(13)">📦 Prime</button>
+        
+        <button class="power" onclick="send('PowerOff')">⏻ Power</button>
+    </div>
+
+    <script>
+        // YOUR EXISTING WORKING FUNCTIONS
+        function send(command) {
+            const ip = document.getElementById('ip').value;
+            if (!ip) {
+                alert('Enter Roku IP first!');
+                return;
+            }
+            fetch(`http://${ip}:8060/keypress/${command}`, { method: 'POST' })
+                .then(() => console.log(`Sent: ${command}`))
+                .catch(err => console.error('Error:', err));
+        }
+
+        function launch(appId) {
+            const ip = document.getElementById('ip').value;
+            if (!ip) {
+                alert('Enter Roku IP first!');
+                return;
+            }
+            fetch(`http://${ip}:8060/launch/${appId}`, { method: 'POST' })
+                .then(() => console.log(`Launched app: ${appId}`))
+                .catch(err => console.error('Error:', err));
+        }
+
+        // QUICK IP SAVE
+        function saveIP() {
+            const ip = document.getElementById('ip').value;
+            localStorage.setItem('rokuIP', ip);
+        }
+
+       function startVoice() {
+    if (!('webkitSpeechRecognition' in window)) {
+        document.getElementById('voiceStatus').textContent = "Voice not supported";
+        return;
+    }
+    
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onresult = function(event) {
+        const speech = event.results[0][0].transcript.toLowerCase();
+        document.getElementById('voiceStatus').textContent = `You said: "${speech}"`;
+        
+        if (speech.includes('pause that s***')) {
+            document.getElementById('voiceStatus').textContent = " PAUSING THAT SHIT!";
+            
+            // USE DIRECT FETCH INSTEAD OF send() FUNCTION
+            const ip = document.getElementById('ip').value;
+            if (!ip) {
+                document.getElementById('voiceStatus').textContent = "❌ Enter Roku IP first!";
+                return;
+            }
+            
+            // Direct fetch - same as your working buttons
+            fetch(`http://${ip}:8060/keypress/Play`, { 
+                method: 'POST' 
+            })
+            .then(() => {
+                document.getElementById('voiceStatus').textContent = "✅ PAUSED THAT SHIT!";
+                console.log("Voice pause command sent successfully!");
+            })
+            .catch(err => {
+                document.getElementById('voiceStatus').textContent = "❌ Failed to send command";
+                console.error("Voice command error:", err);
+            });
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        document.getElementById('voiceStatus').textContent = `Voice error: ${event.error}`;
+    };
+    
+    recognition.start();
+    document.getElementById('voiceStatus').textContent = "🎤 Listening... say 'pause that shit'";
+}
+
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+        // LOAD SAVED IP
+        window.onload = function() {
+            const savedIP = localStorage.getItem('rokuIP');
+            if (savedIP) {
+                document.getElementById('ip').value = savedIP;
+            }
+            document.getElementById('ip').addEventListener('input', saveIP);
+        }
+    </script>
+</body>
+</html>
+	
